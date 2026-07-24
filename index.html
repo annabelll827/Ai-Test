@@ -205,25 +205,28 @@
         let currentMode = 'signup'; 
         let activeProjectId = null;
 
-        // فەنکشنی نوێکراوە بۆ وەرگرتنی وەڵامی AI بە شێوازێکی پۆلێنکراو و بێ کێشە
+        // سیستمی پشتبەستوو بە چەندین سەرچاوەی API بۆ وەڵامدانەوەی بێ کێشە
         async function askAI(message) {
             try {
-                const response = await fetch(`https://apis.davidcyriltech.my.id/ai/gpt4o?text=${encodeURIComponent(message)}`);
-                
+                const response = await fetch(`https://kaiz-apis.gleeze.com/api/gpt-4o?q=${encodeURIComponent(message)}`);
                 if (response.ok) {
                     const data = await response.json();
-                    if (data && (data.result || data.message || data.response)) {
-                        return data.result || data.message || data.response;
-                    } else if (typeof data === 'string') {
-                        return data;
-                    }
+                    if (data && data.response) return data.response;
+                    if (data && data.result) return data.result;
+                    if (typeof data === 'string') return data;
                 }
-                
-                return "سڵاو! پەیامەکەت گەیشت، بەڵام سێرڤەرەکە وەڵامی نەبوو. تکایە دووبارە هەوڵ بدەوە.";
-                
-            } catch (error) {
-                return "سڵاو! کێشەیەک لە پەیوەندیکردن بە تۆڕی ئینتەرنێت هەیە. تکایە دووبارە بنێرە.";
-            }
+            } catch (e) {}
+
+            try {
+                const backupResponse = await fetch(`https://apis.davidcyriltech.my.id/ai/gemini?text=${encodeURIComponent(message)}`);
+                if (backupResponse.ok) {
+                    const backupData = await backupResponse.json();
+                    if (backupData && backupData.result) return backupData.result;
+                    if (backupData && backupData.message) return backupData.message;
+                }
+            } catch (e) {}
+
+            return "سڵاو! پەیوەندی لەگەڵ سێرڤەری زیرەکی دەستکرد سەرکەوتوو نەبوو، تکایە دووبارە هەوڵ بدەوە.";
         }
 
         function showSection(sectionId) {
