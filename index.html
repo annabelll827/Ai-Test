@@ -205,26 +205,17 @@
         let currentMode = 'signup'; 
         let activeProjectId = null;
 
-        // فەنکشنی ڕاستەکراوە و نوێکراوە بۆ وەڵامدانەوەی AI بە شێوازی POST
+        // فەنکشنی نوێکراوە بۆ وەرگرتنی وەڵامی AI بە شێوازێکی پۆلێنکراو و بێ کێشە
         async function askAI(message) {
             try {
-                const response = await fetch("https://text.pollinations.ai/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        messages: [
-                            { role: "user", content: message }
-                        ],
-                        model: "openai"
-                    })
-                });
-
+                const response = await fetch(`https://apis.davidcyriltech.my.id/ai/gpt4o?text=${encodeURIComponent(message)}`);
+                
                 if (response.ok) {
-                    const text = await response.text();
-                    if (text && text.trim().length > 0) {
-                        return text;
+                    const data = await response.json();
+                    if (data && (data.result || data.message || data.response)) {
+                        return data.result || data.message || data.response;
+                    } else if (typeof data === 'string') {
+                        return data;
                     }
                 }
                 
