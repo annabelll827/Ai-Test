@@ -1,598 +1,221 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Builder - Zora Ai</title>
+    <title>Zora AI — Your Intelligent Companion</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        .page-section { display: none; }
-        .page-section.active { display: flex; }
-        .sidebar-drawer { transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
-        .sidebar-drawer.open { transform: translateX(0); }
-    </style>
-</head>
-<body class="bg-black text-white min-h-screen flex flex-col justify-between relative overflow-x-hidden">
-
-    <!-- Hidden File Input for Gallery / Files -->
-    <input type="file" id="fileUploadInput" class="hidden" multiple accept="image/*,application/*" onchange="handleFileSelection(event)">
-
-    <!-- Background Gradient Glow Effect -->
-    <div class="absolute inset-0 flex justify-center items-end pointer-events-none">
-        <div class="w-[300px] h-[300px] md:w-[600px] md:h-[400px] bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 rounded-full blur-[100px] opacity-60 translate-y-1/3"></div>
-    </div>
-
-    <!-- SHARED SIDEBAR DRAWER -->
-    <div id="sidebarDrawer" class="sidebar-drawer fixed inset-y-0 left-0 w-80 bg-zinc-950 border-r border-zinc-800 z-50 flex flex-col justify-between p-4 shadow-2xl">
-        <div>
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center gap-2 text-lg font-bold">
-                    <span class="w-5 h-5 bg-gradient-to-tr from-orange-500 to-pink-500 rounded-md inline-block"></span>
-                    <span>Zora Ai</span>
-                </div>
-                <button onclick="toggleSidebar()" class="text-zinc-400 hover:text-white p-2 cursor-pointer">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="relative mb-4">
-                <i class="fa-solid fa-search absolute left-3 top-3 text-zinc-500 text-sm"></i>
-                <input type="text" id="searchProjectsInput" oninput="filterProjects()" placeholder="Search projects..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-sm text-zinc-200 outline-none">
-            </div>
-
-            <button onclick="createNewProject()" class="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl py-2.5 px-3 flex items-center gap-3 text-sm font-medium transition cursor-pointer mb-3">
-                <i class="fa-solid fa-plus text-zinc-400"></i>
-                <span>Create new project</span>
-            </button>
-
-            <div class="space-y-1 overflow-y-auto max-h-[45vh]" id="projectListContainer"></div>
-        </div>
-
-        <div class="border-t border-zinc-900 pt-4 mt-2 space-y-3">
-            <a href="mailto:zoraaikrd1@gmail.com" class="w-full bg-zinc-900/40 hover:bg-zinc-900 border border-zinc-800/50 rounded-xl py-2 px-3 flex items-center gap-3 text-xs text-zinc-300 transition cursor-pointer">
-                <i class="fa-solid fa-headset text-purple-400"></i>
-                <span>zoraaikrd1@gmail.com</span>
-            </a>
-
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div id="userAvatar" class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center font-bold text-sm">U</div>
-                    <span id="sidebarUsername" class="text-sm font-medium truncate max-w-[140px]">User</span>
-                </div>
-                <button onclick="logoutToLogin()" class="text-zinc-400 hover:text-red-400 transition cursor-pointer p-2" title="Logout">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- WELCOME SECTION -->
-    <div id="welcomeSection" class="page-section flex-grow items-center justify-center px-4 z-10 my-auto">
-        <div class="w-full max-w-md bg-zinc-900/90 border border-zinc-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl text-center">
-            <div class="flex items-center justify-center gap-2 text-2xl font-bold tracking-wide mb-6">
-                <span class="w-7 h-7 bg-gradient-to-tr from-orange-500 to-pink-500 rounded-lg inline-block"></span>
-                <span>Zora Ai</span>
-            </div>
-            <h2 class="text-2xl font-semibold mb-2">Welcome to Zora Ai</h2>
-            <p class="text-zinc-400 text-sm mb-8">Build amazing apps and interfaces instantly using artificial intelligence.</p>
-            <div class="flex gap-4">
-                <button type="button" onclick="showAuth('login')" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 rounded-xl transition border border-zinc-700 cursor-pointer">Login</button>
-                <button type="button" onclick="showAuth('signup')" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium py-3 rounded-xl transition shadow-lg cursor-pointer">Sign Up</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- AUTH SECTION -->
-    <div id="authSection" class="page-section flex-grow items-center justify-center px-4 z-10 my-auto">
-        <div class="w-full max-w-md bg-zinc-900/90 border border-zinc-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative">
-            <button type="button" onclick="showWelcome()" class="absolute top-6 left-6 text-zinc-400 hover:text-white transition cursor-pointer">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
-            <div class="flex items-center justify-center gap-2 text-2xl font-bold tracking-wide mb-6">
-                <span class="w-7 h-7 bg-gradient-to-tr from-orange-500 to-pink-500 rounded-lg inline-block"></span>
-                <span>Zora Ai</span>
-            </div>
-            <h3 id="authTitle" class="text-xl font-semibold text-center mb-2">Create a new account</h3>
-            <p id="errorMessage" class="text-red-400 text-xs text-center mb-4 hidden"></p>
-
-            <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4">
-                <div id="nameFieldContainer">
-                    <label class="block text-xs font-medium text-zinc-400 mb-1">Username</label>
-                    <input type="text" id="fullName" placeholder="username" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-zinc-400 mb-1">Email Address</label>
-                    <input type="email" id="emailInput" required placeholder="name@example.com" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-zinc-400 mb-1">Password</label>
-                    <input type="password" id="passwordInput" required placeholder="••••••••" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 outline-none">
-                </div>
-                <button type="submit" id="authSubmitBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium py-3 rounded-xl transition shadow-lg mt-2 cursor-pointer">Sign Up</button>
-            </form>
-            <div class="text-center mt-6 text-sm text-zinc-400">
-                <p id="toggleText">Already have an account? <button type="button" onclick="toggleAuthMode()" class="text-purple-400 font-medium hover:underline ml-1 cursor-pointer">Login</button></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN APP SECTION -->
-    <div id="appSection" class="page-section flex-col justify-between flex-grow min-h-screen relative">
-        <header class="w-full flex justify-between items-center p-5 z-10">
-            <button type="button" onclick="toggleSidebar()" class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:bg-zinc-800 transition cursor-pointer">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div class="flex items-center gap-2 text-xl font-bold tracking-wide">
-                <span class="w-6 h-6 bg-gradient-to-tr from-orange-500 to-pink-500 rounded-lg inline-block"></span>
-                <span>Zora Ai</span>
-            </div>
-            <button type="button" onclick="logoutToLogin()" class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-red-400 transition cursor-pointer" title="Logout">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
-        </header>
-
-        <main class="flex-grow flex flex-col items-center justify-center px-4 z-10">
-            <h1 class="text-3xl md:text-5xl font-semibold text-center mb-8 tracking-tight">
-                Let's build something, <br />
-                <span id="displayUsername" class="text-white">User</span>
-            </h1>
-
-            <div class="w-full max-w-xl bg-zinc-900/90 border border-zinc-800 rounded-3xl p-4 shadow-2xl backdrop-blur-xl flex flex-col justify-between">
-                <textarea id="promptInput" placeholder="Analyze my data and..." class="w-full bg-transparent text-zinc-200 placeholder-zinc-500 outline-none resize-none h-16 text-base px-2 pt-1"></textarea>
-
-                <div class="flex justify-between items-center pt-2 px-1">
-                    <button type="button" onclick="triggerFileUpload()" class="w-8 h-8 rounded-full bg-zinc-800/60 flex items-center justify-center text-zinc-400 transition cursor-pointer">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                    </button>
-                    <div class="flex items-center gap-3">
-                        <button type="button" onclick="startVoiceCall()" class="flex items-center gap-1.5 bg-zinc-800/40 text-xs text-zinc-300 px-3 py-1.5 rounded-xl border border-zinc-700/50 cursor-pointer">
-                            <i class="fa-solid fa-phone text-purple-400 text-xs"></i>
-                            <span class="font-semibold">Vc</span>
-                        </button>
-                        <button type="button" onclick="submitPrompt()" class="w-8 h-8 rounded-full bg-zinc-200 text-black flex items-center justify-center transition cursor-pointer">
-                            <i class="fa-solid fa-arrow-up text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
-        <footer class="h-10 z-10"></footer>
-    </div>
-
-    <!-- CHAT SECTION -->
-    <div id="chatSection" class="page-section flex-col justify-between flex-grow min-h-screen relative bg-black">
-        <header class="w-full flex justify-between items-center p-5 border-b border-zinc-900 z-10">
-            <div class="flex items-center gap-3">
-                <button type="button" onclick="toggleSidebar()" class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 transition cursor-pointer">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <span id="currentProjectTitle" class="text-sm font-medium text-zinc-200">Hello World</span>
-            </div>
-            <button onclick="showHomeFromChat()" class="text-xs bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-3 py-2 rounded-xl text-zinc-300 transition cursor-pointer">
-                <i class="fa-solid fa-arrow-left mr-1"></i> Home
-            </button>
-        </header>
-
-        <main class="flex-grow flex flex-col px-4 py-6 max-w-3xl mx-auto w-full overflow-y-auto space-y-6 z-10" id="chatMessagesContainer"></main>
-
-        <div class="w-full p-4 bg-black border-t border-zinc-900 z-10">
-            <div class="max-w-3xl mx-auto bg-zinc-900/90 border border-zinc-800 rounded-3xl p-4 shadow-2xl flex flex-col justify-between">
-                <textarea id="chatInput" placeholder="Queue follow-up..." class="w-full bg-transparent text-zinc-200 placeholder-zinc-500 outline-none resize-none h-14 text-sm px-2 pt-1"></textarea>
-
-                <div class="flex justify-between items-center pt-2 px-1">
-                    <button type="button" onclick="triggerFileUpload()" class="w-8 h-8 rounded-full bg-zinc-800/60 flex items-center justify-center text-zinc-400 transition cursor-pointer">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                    </button>
-                    <div class="flex items-center gap-3">
-                        <button type="button" onclick="startVoiceCall()" class="flex items-center gap-1.5 bg-zinc-800/40 text-xs text-zinc-300 px-3 py-1.5 rounded-xl border border-zinc-700/50 cursor-pointer">
-                            <i class="fa-solid fa-phone text-purple-400 text-xs"></i>
-                            <span class="font-semibold">Vc</span>
-                        </button>
-                        <button type="button" onclick="sendChatMessage()" class="w-8 h-8 rounded-full bg-zinc-200 text-black flex items-center justify-center transition cursor-pointer">
-                            <i class="fa-solid fa-arrow-up text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- JavaScript -->
     <script>
-        let currentMode = 'signup'; 
-        let activeProjectId = null;
-
-        // سیستمی پشتبەستوو بە چەندین سەرچاوەی API بۆ وەڵامدانەوەی بێ کێشە
-        async function askAI(message) {
-            try {
-                const response = await fetch(`https://kaiz-apis.gleeze.com/api/gpt-4o?q=${encodeURIComponent(message)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data && data.response) return data.response;
-                    if (data && data.result) return data.result;
-                    if (typeof data === 'string') return data;
-                }
-            } catch (e) {}
-
-            try {
-                const backupResponse = await fetch(`https://apis.davidcyriltech.my.id/ai/gemini?text=${encodeURIComponent(message)}`);
-                if (backupResponse.ok) {
-                    const backupData = await backupResponse.json();
-                    if (backupData && backupData.result) return backupData.result;
-                    if (backupData && backupData.message) return backupData.message;
-                }
-            } catch (e) {}
-
-            return "سڵاو! پەیوەندی لەگەڵ سێرڤەری زیرەکی دەستکرد سەرکەوتوو نەبوو، تکایە دووبارە هەوڵ بدەوە.";
-        }
-
-        function showSection(sectionId) {
-            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
-        }
-
-        function showError(message) {
-            const errEl = document.getElementById('errorMessage');
-            errEl.innerText = message;
-            errEl.classList.remove('hidden');
-        }
-
-        function hideError() {
-            document.getElementById('errorMessage').classList.add('hidden');
-        }
-
-        function triggerFileUpload() {
-            document.getElementById('fileUploadInput').click();
-        }
-
-        function handleFileSelection(event) {
-            const files = event.target.files;
-            if (files.length > 0) {
-                let fileNames = Array.from(files).map(f => f.name).join(', ');
-                alert("Selected files/images: " + fileNames);
-            }
-        }
-
-        function startVoiceCall() {
-            alert("Voice Call (Vc) started...");
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedState = localStorage.getItem('appState') || 'welcome';
-            const savedUser = localStorage.getItem('userName');
-
-            if (savedUser) {
-                document.getElementById('displayUsername').innerText = savedUser;
-                document.getElementById('sidebarUsername').innerText = savedUser;
-                document.getElementById('userAvatar').innerText = savedUser.charAt(0).toUpperCase();
-            }
-
-            loadProjects();
-
-            if (savedState === 'app') {
-                showSection('appSection');
-            } else if (savedState === 'chat') {
-                showSection('chatSection');
-                loadActiveChatMessages();
-            } else if (savedState === 'login' || savedState === 'signup') {
-                currentMode = savedState;
-                showSection('authSection');
-                updateAuthUI();
-            } else {
-                showSection('welcomeSection');
-            }
-        });
-
-        function showWelcome() {
-            localStorage.setItem('appState', 'welcome');
-            showSection('welcomeSection');
-        }
-
-        function showHomeFromChat() {
-            localStorage.setItem('appState', 'app');
-            showSection('appSection');
-        }
-
-        function showAuth(mode) {
-            currentMode = mode;
-            hideError();
-            localStorage.setItem('appState', mode);
-            showSection('authSection');
-            updateAuthUI();
-        }
-
-        function toggleAuthMode() {
-            currentMode = (currentMode === 'login') ? 'signup' : 'login';
-            hideError();
-            localStorage.setItem('appState', currentMode);
-            updateAuthUI();
-        }
-
-        function updateAuthUI() {
-            const title = document.getElementById('authTitle');
-            const nameContainer = document.getElementById('nameFieldContainer');
-            const submitBtn = document.getElementById('authSubmitBtn');
-            const toggleText = document.getElementById('toggleText');
-
-            document.getElementById('emailInput').value = '';
-            document.getElementById('passwordInput').value = '';
-            if(document.getElementById('fullName')) document.getElementById('fullName').value = '';
-
-            if (currentMode === 'login') {
-                title.innerText = "Login to your account";
-                nameContainer.classList.add('hidden');
-                document.getElementById('fullName').removeAttribute('required');
-                submitBtn.innerText = "Login";
-                toggleText.innerHTML = `Don't have an account? <button type="button" onclick="toggleAuthMode()" class="text-purple-400 font-medium hover:underline ml-1 cursor-pointer">Sign Up</button>`;
-            } else {
-                title.innerText = "Create a new account";
-                nameContainer.classList.remove('hidden');
-                document.getElementById('fullName').setAttribute('required', 'true');
-                submitBtn.innerText = "Sign Up";
-                toggleText.innerHTML = `Already have an account? <button type="button" onclick="toggleAuthMode()" class="text-purple-400 font-medium hover:underline ml-1 cursor-pointer">Login</button>`;
-            }
-        }
-
-        function handleAuth(event) {
-            event.preventDefault();
-            hideError();
-
-            const email = document.getElementById('emailInput').value.trim().toLowerCase();
-            const password = document.getElementById('passwordInput').value;
-            let users = JSON.parse(localStorage.getItem('appUsers')) || [];
-
-            if (currentMode === 'signup') {
-                const nameInput = document.getElementById('fullName').value.trim();
-                let userName = nameInput !== "" ? nameInput : "User";
-
-                const existingUser = users.find(u => u.email === email);
-                if (existingUser) {
-                    showError("This email is already registered! Please Login instead.");
-                    return;
-                }
-
-                users.push({ email: email, password: password, name: userName });
-                localStorage.setItem('appUsers', JSON.stringify(users));
-                localStorage.setItem('userName', userName);
-                localStorage.setItem('appState', 'app');
-
-                document.getElementById('displayUsername').innerText = userName;
-                document.getElementById('sidebarUsername').innerText = userName;
-                document.getElementById('userAvatar').innerText = userName.charAt(0).toUpperCase();
-                showSection('appSection');
-            } else {
-                const foundUser = users.find(u => u.email === email && u.password === password);
-                if (!foundUser) {
-                    showError("Incorrect email or password, or account doesn't exist!");
-                    return;
-                }
-
-                localStorage.setItem('userName', foundUser.name);
-                localStorage.setItem('appState', 'app');
-
-                document.getElementById('displayUsername').innerText = foundUser.name;
-                document.getElementById('sidebarUsername').innerText = foundUser.name;
-                document.getElementById('userAvatar').innerText = foundUser.name.charAt(0).toUpperCase();
-                showSection('appSection');
-            }
-        }
-
-        function logoutToLogin() {
-            localStorage.setItem('appState', 'login');
-            showAuth('login');
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebarDrawer').classList.toggle('open');
-        }
-
-        function createNewProject() {
-            let projects = JSON.parse(localStorage.getItem('userProjects')) || [];
-            const newId = Date.now();
-            const newProj = { 
-                id: newId, 
-                name: "New Project", 
-                time: "Just now",
-                messages: [{ sender: 'ai', text: "سڵاو! خۆشحاڵم بە بینینت. چۆن یارمەتیت بدەم بۆ دروستکردنی پڕۆژەکەت؟" }]
-            };
-            projects.unshift(newProj);
-            localStorage.setItem('userProjects', JSON.stringify(projects));
-            localStorage.setItem('activeProjectId', newId);
-            activeProjectId = newId;
-            
-            loadProjects();
-            toggleSidebar();
-            openChat(newId);
-        }
-
-        function loadProjects() {
-            let projects = JSON.parse(localStorage.getItem('userProjects'));
-            if (!projects) {
-                projects = [{ 
-                    id: 1, 
-                    name: "Hello World", 
-                    time: "Just now",
-                    messages: [
-                        { sender: 'user', text: "سڵاو" },
-                        { sender: 'ai', text: "سڵاو! خۆشحاڵم بە بینینت، چۆن یارمەتیت بدەم؟" }
-                    ]
-                }];
-                localStorage.setItem('userProjects', JSON.stringify(projects));
-            }
-            renderProjectList(projects);
-        }
-
-        function renderProjectList(projectsToRender) {
-            const container = document.getElementById('projectListContainer');
-            container.innerHTML = "";
-            
-            if(projectsToRender.length === 0) {
-                container.innerHTML = `<p class="text-xs text-zinc-500 text-center py-4">No projects found.</p>`;
-                return;
-            }
-
-            projectsToRender.forEach(p => {
-                container.innerHTML += `
-                    <div class="w-full bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/60 rounded-xl p-3 flex items-center justify-between cursor-pointer transition mb-1">
-                        <div onclick="openChat(${p.id})" class="flex items-center gap-3 truncate flex-grow">
-                            <div class="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 text-xs shrink-0">
-                                <i class="fa-solid fa-folder"></i>
-                            </div>
-                            <div class="flex flex-col truncate">
-                                <span class="text-sm font-medium text-zinc-200 truncate">${p.name}</span>
-                                <span class="text-[10px] text-zinc-500">${p.time}</span>
-                            </div>
-                        </div>
-                        <button onclick="deleteProject(event, ${p.id})" class="text-zinc-500 hover:text-red-400 p-2 transition cursor-pointer" title="Delete project">
-                            <i class="fa-solid fa-trash text-xs"></i>
-                        </button>
-                    </div>
-                `;
-            });
-        }
-
-        function deleteProject(event, projectId) {
-            event.stopPropagation();
-            let projects = JSON.parse(localStorage.getItem('userProjects')) || [];
-            projects = projects.filter(p => p.id !== projectId);
-            localStorage.setItem('userProjects', JSON.stringify(projects));
-            loadProjects();
-            if(activeProjectId == projectId) showHomeFromChat();
-        }
-
-        function filterProjects() {
-            const query = document.getElementById('searchProjectsInput').value.trim().toLowerCase();
-            let projects = JSON.parse(localStorage.getItem('userProjects')) || [];
-            if(query === "") {
-                renderProjectList(projects);
-            } else {
-                renderProjectList(projects.filter(p => p.name.toLowerCase().includes(query)));
-            }
-        }
-
-        function openChat(projectId) {
-            let projects = JSON.parse(localStorage.getItem('userProjects')) || [];
-            const proj = projects.find(p => p.id === projectId);
-            if(proj) {
-                activeProjectId = projectId;
-                localStorage.setItem('activeProjectId', projectId);
-                localStorage.setItem('appState', 'chat');
-                document.getElementById('currentProjectTitle').innerText = proj.name;
-                showSection('chatSection');
-                renderChatMessages(proj.messages || []);
-                toggleSidebar();
-            }
-        }
-
-        function loadActiveChatMessages() {
-            let projects = JSON.parse(localStorage.getItem('userProjects')) || [];
-            activeProjectId = localStorage.getItem('activeProjectId');
-            let proj = projects.find(p => p.id == activeProjectId);
-            if(!proj && projects.length > 0) {
-                proj = projects[0];
-                activeProjectId = proj.id;
-            }
-            if(proj) {
-                document.getElementById('currentProjectTitle').innerText = proj.name;
-                renderChatMessages(proj.messages || []);
-            }
-        }
-
-        async function submitPrompt() {
-            const val = document.getElementById('promptInput').value.trim();
-            if(val !== "") {
-                let projects = JSON.parse(localStorage.getItem('userProjects')) || [];
-                const newId = Date.now();
-                
-                const tempProj = { 
-                    id: newId, 
-                    name: val.substring(0, 20), 
-                    time: "Just now",
-                    messages: [
-                        { sender: 'user', text: val },
-                        { sender: 'ai', text: "سەرقاڵی بیرکردنەوەم..." }
-                    ]
-                };
-                projects.unshift(tempProj);
-                localStorage.setItem('userProjects', JSON.stringify(projects));
-                localStorage.setItem('activeProjectId', newId);
-                activeProjectId = newId;
-                
-                document.getElementById('promptInput').value = "";
-                loadProjects();
-                
-                document.getElementById('currentProjectTitle').innerText = tempProj.name;
-                showSection('chatSection');
-                renderChatMessages(tempProj.messages);
-                localStorage.setItem('appState', 'chat');
-
-                const aiReply = await askAI(val);
-                
-                let updatedProjects = JSON.parse(localStorage.getItem('userProjects')) || [];
-                let projIndex = updatedProjects.findIndex(p => p.id == newId);
-                if(projIndex !== -1) {
-                    updatedProjects[projIndex].messages[1].text = aiReply;
-                    localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
-                    renderChatMessages(updatedProjects[projIndex].messages);
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#09090b',
+                        foreground: '#fafafa',
+                        card: '#18181b',
+                        border: '#27272a',
+                        primary: '#a855f7',
+                        'primary-foreground': '#ffffff',
+                        muted: '#71717a',
+                        'muted-foreground': '#a1a1aa',
+                        destructive: '#ef4444'
+                    }
                 }
             }
-        }
-
-        async function sendChatMessage() {
-            const val = document.getElementById('chatInput').value.trim();
-            if(val !== "" && activeProjectId) {
-                let projects = JSON.parse(localStorage.getItem('userProjects')) || [];
-                let projIndex = projects.findIndex(p => p.id == activeProjectId);
-                
-                if(projIndex !== -1) {
-                    projects[projIndex].messages.push({ sender: 'user', text: val });
-                    projects[projIndex].messages.push({ sender: 'ai', text: "سەرقاڵی بیرکردنەوەم..." });
-                    
-                    localStorage.setItem('userProjects', JSON.stringify(projects));
-                    document.getElementById('chatInput').value = "";
-                    renderChatMessages(projects[projIndex].messages);
-                    
-                    const aiReply = await askAI(val);
-                    
-                    projects[projIndex].messages[projects[projIndex].messages.length - 1].text = aiReply;
-                    localStorage.setItem('userProjects', JSON.stringify(projects));
-                    
-                    renderChatMessages(projects[projIndex].messages);
-                    loadProjects();
-                }
-            }
-        }
-
-        function renderChatMessages(messages) {
-            const container = document.getElementById('chatMessagesContainer');
-            container.innerHTML = "";
-            
-            messages.forEach(m => {
-                if(m.sender === 'user') {
-                    container.innerHTML += `
-                        <div class="flex justify-end">
-                            <div class="bg-zinc-800 text-zinc-100 rounded-2xl px-4 py-2.5 max-w-md text-sm">${m.text}</div>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML += `
-                        <div class="flex justify-start">
-                            <div class="bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-2xl px-4 py-3 max-w-xl text-sm leading-relaxed">
-                                <div class="flex items-center gap-2 mb-1 text-xs text-purple-400 font-semibold">
-                                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Zora Ai
-                                </div>
-                                ${m.text}
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            container.scrollTop = container.scrollHeight;
         }
     </script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .primary-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        }
+        .brand-glow {
+            box-shadow: 0 0 30px -5px rgba(168, 85, 247, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen flex flex-col font-sans antialiased selection:bg-primary selection:text-white">
+    <div id="root" class="flex-1 flex flex-col"></div>
 
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function App() {
+            const [conversations, setConversations] = useState([
+                { id: '1', title: 'New Conversation' }
+            ]);
+            const [currentConvoId, setCurrentConvoId] = useState('1');
+            const [messagesMap, setMessagesMap] = useState({
+                '1': [
+                    { id: 'm1', role: 'assistant', content: 'سڵاو! من Zora AI مە. چۆن دەتوانم ئەمڕۆ یارمەتیت بدەم؟' }
+                ]
+            });
+            const [input, setInput] = useState('');
+            const [loading, setLoading] = useState(false);
+            const scrollRef = useRef(null);
+
+            const messages = messagesMap[currentConvoId] || [];
+
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [messages, currentConvoId]);
+
+            useEffect(() => {
+                scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages, loading]);
+
+            const handleSend = (e) => {
+                e.preventDefault();
+                if (!input.trim() || loading) return;
+
+                const userText = input.trim();
+                const userMsg = { id: Date.now().toString(), role: 'user', content: userText };
+
+                // Update messages for current conversation
+                setMessagesMap(prev => ({
+                    ...prev,
+                    [currentConvoId]: [...(prev[currentConvoId] || []), userMsg]
+                }));
+                setInput('');
+                setLoading(true);
+
+                // Update conversation title if it's the first message
+                setConversations(prev => prev.map(c => {
+                    if (c.id === currentConvoId && c.title === 'New Conversation') {
+                        return { ...c, title: userText.slice(0, 30) };
+                    }
+                    return c;
+                }));
+
+                // Simulate AI Response with Kurdish support
+                setTimeout(() => {
+                    let reply = `سوپاس بۆ پەیامەکەت! من لێرەم بۆ هاوکاری کردنت لەسەر بابەتی "${userText}".`;
+                    if (userText.includes('سڵاو') || userText.toLowerCase().includes('hi')) {
+                        reply = 'سڵاو! ڕۆژت باش، فەرموو پرسیارەکەت بکە.';
+                    } else if (userText.includes('کۆد') || userText.toLowerCase().includes('code')) {
+                        reply = 'بێگومان! دەتوانیت کۆدەکانت بنێریت یان پرسیار لەسەر ፕሮگرامیگ بکەیت تا شیکاریت بۆ بکەم.';
+                    }
+
+                    const aiMsg = { id: (Date.now() + 1).toString(), role: 'assistant', content: reply };
+                    
+                    setMessagesMap(prev => ({
+                        ...prev,
+                        [currentConvoId]: [...(prev[currentConvoId] || []), aiMsg]
+                    }));
+                    setLoading(false);
+                }, 1000);
+            };
+
+            const createNewChat = () => {
+                const newId = Date.now().toString();
+                setConversations(prev => [{ id: newId, title: 'New Conversation' }, ...prev]);
+                setMessagesMap(prev => ({
+                    ...prev,
+                    [newId]: [{ id: 'init-' + newId, role: 'assistant', content: 'سڵاو! گفتوگۆیەکی نوێ دەستی پێکرد. چۆن یارمەتیت بدەم؟' }]
+                }));
+                setCurrentConvoId(newId);
+            };
+
+            return (
+                <div className="flex h-screen w-full overflow-hidden">
+                    {/* Sidebar */}
+                    <aside className="w-72 border-r border-border bg-card/40 flex flex-col hidden md:flex">
+                        <div className="p-4 border-b border-border flex items-center justify-between">
+                            <div className="flex items-center gap-2 font-bold text-lg">
+                                <div className="w-8 h-8 rounded-xl primary-gradient flex items-center justify-center text-white brand-glow">Z</div>
+                                <span>Zora AI</span>
+                            </div>
+                        </div>
+                        <div className="p-3">
+                            <button 
+                                onClick={createNewChat}
+                                className="w-full py-2.5 px-4 rounded-xl primary-gradient text-white font-medium text-sm flex items-center justify-center gap-2 brand-glow transition"
+                            >
+                                <i data-lucide="plus" className="w-4 h-4"></i>
+                                گفتوگۆی نوێ
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto px-3 space-y-1">
+                            {conversations.map(c => (
+                                <button
+                                    key={c.id}
+                                    onClick={() => setCurrentConvoId(c.id)}
+                                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm truncate flex items-center gap-2 transition ${c.id === currentConvoId ? 'bg-primary/20 text-primary border border-primary/30 font-medium' : 'text-muted-foreground hover:bg-card hover:text-foreground'}`}
+                                >
+                                    <i data-lucide="message-square" className="w-4 h-4 shrink-0"></i>
+                                    <span className="truncate">{c.title}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </aside>
+
+                    {/* Main Chat Area */}
+                    <main className="flex-1 flex flex-col h-full bg-background">
+                        {/* Header */}
+                        <header className="h-14 border-b border-border px-6 flex items-center justify-between bg-background/80 backdrop-blur">
+                            <span className="font-semibold text-sm">Zora AI Assistant</span>
+                            <span className="text-xs text-muted-foreground border border-border px-2.5 py-1 rounded-full">Secure Mode</span>
+                        </header>
+
+                        {/* Messages Container */}
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+                            <div className="max-w-2xl mx-auto w-full space-y-6">
+                                {messages.map(m => (
+                                    <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role === 'user' ? 'primary-gradient text-white rounded-br-sm shadow-lg' : 'bg-card border border-border text-foreground rounded-bl-sm'}`}>
+                                            {m.content}
+                                        </div>
+                                    </div>
+                                ))}
+                                {loading && (
+                                    <div className="flex justify-start">
+                                        <div className="bg-card border border-border rounded-2xl px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-primary animate-bounce"></span>
+                                            <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-.2s]"></span>
+                                            <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-.4s]"></span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={scrollRef} />
+                            </div>
+                        </div>
+
+                        {/* Input Footer */}
+                        <div className="p-4 border-t border-border bg-background/80 backdrop-blur">
+                            <form onSubmit={handleSend} className="max-w-2xl mx-auto w-full flex items-center gap-2 bg-card border border-border rounded-2xl px-4 py-2 focus-within:border-primary transition">
+                                <input 
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    placeholder="پرسیارەکەت لێرە بنووسە..."
+                                    className="flex-1 bg-transparent border-0 outline-none text-sm py-2 text-foreground placeholder:text-muted-foreground"
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={!input.trim() || loading}
+                                    className="w-9 h-9 rounded-xl primary-gradient text-white flex items-center justify-center disabled:opacity-40 transition brand-glow cursor-pointer"
+                                >
+                                    <i data-lucide="send" className="w-4 h-4"></i>
+                                </button>
+                            </form>
+                            <p className="text-center text-[11px] text-muted-foreground mt-2">Zora AI — Your Intelligent Companion</p>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
 </body>
 </html>
