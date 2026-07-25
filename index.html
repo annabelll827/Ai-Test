@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zora AI — Your Intelligent Companion</title>
+    <title>Zora AI Assistant</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,8 +19,7 @@
                         primary: '#a855f7',
                         'primary-foreground': '#ffffff',
                         muted: '#71717a',
-                        'muted-foreground': '#a1a1aa',
-                        destructive: '#ef4444'
+                        'muted-foreground': '#a1a1aa'
                     }
                 }
             }
@@ -50,12 +49,12 @@
 
         function App() {
             const [conversations, setConversations] = useState([
-                { id: '1', title: 'New Conversation' }
+                { id: '1', title: 'گفتوگۆی نوێ' }
             ]);
             const [currentConvoId, setCurrentConvoId] = useState('1');
             const [messagesMap, setMessagesMap] = useState({
                 '1': [
-                    { id: 'm1', role: 'assistant', content: 'سڵاو! من Zora AI مە. چۆن دەتوانم ئەمڕۆ یارمەتیت بدەم؟' }
+                    { id: 'm1', role: 'assistant', content: 'سڵاو! من Zora AI م. چۆن دەتوانم ئەمڕۆ یارمەتیت بدەم؟' }
                 ]
             });
             const [input, setInput] = useState('');
@@ -81,44 +80,45 @@
                 const userText = input.trim();
                 const userMsg = { id: Date.now().toString(), role: 'user', content: userText };
 
-                // Update messages for current conversation
+                const updatedMessages = [...messages, userMsg];
                 setMessagesMap(prev => ({
                     ...prev,
-                    [currentConvoId]: [...(prev[currentConvoId] || []), userMsg]
+                    [currentConvoId]: updatedMessages
                 }));
                 setInput('');
                 setLoading(true);
 
-                // Update conversation title if it's the first message
+                // گۆڕینی ناوی گفتوگۆکە بەپێی یەکەم پرسیار
                 setConversations(prev => prev.map(c => {
-                    if (c.id === currentConvoId && c.title === 'New Conversation') {
+                    if (c.id === currentConvoId && c.title === 'گفتوگۆی نوێ') {
                         return { ...c, title: userText.slice(0, 30) };
                     }
                     return c;
                 }));
 
-                // Simulate AI Response with Kurdish support
+                // وەڵامدانەوەی خۆکارانە و ڕوون بە زمانی کوردی بەبێ پێویستی بە API Key
                 setTimeout(() => {
-                    let reply = `سوپاس بۆ پەیامەکەت! من لێرەم بۆ هاوکاری کردنت لەسەر بابەتی "${userText}".`;
+                    let replyText = `سوپاس بۆ پرسیارەکەت سەبارەت بە "${userText}". من لێرەم بۆ هاوکاری کردن و بەجێگەیاندنی پێویستییەکانت.`;
+                    
                     if (userText.includes('سڵاو') || userText.toLowerCase().includes('hi')) {
-                        reply = 'سڵاو! ڕۆژت باش، فەرموو پرسیارەکەت بکە.';
-                    } else if (userText.includes('کۆد') || userText.toLowerCase().includes('code')) {
-                        reply = 'بێگومان! دەتوانیت کۆدەکانت بنێریت یان پرسیار لەسەر ፕሮگرامیگ بکەیت تا شیکاریت بۆ بکەم.';
+                        replyText = 'سڵاو! ڕۆژت باش، فەرموو چۆن دەتوانم یارمەتیت بدەم؟';
+                    } else if (userText.includes('ناوی') || userText.toLowerCase().includes('who')) {
+                        replyText = 'من Zora AI مە، یاریدەدەری زیرەکی تۆ.';
                     }
 
-                    const aiMsg = { id: (Date.now() + 1).toString(), role: 'assistant', content: reply };
+                    const aiMsg = { id: (Date.now() + 1).toString(), role: 'assistant', content: replyText };
                     
                     setMessagesMap(prev => ({
                         ...prev,
                         [currentConvoId]: [...(prev[currentConvoId] || []), aiMsg]
                     }));
                     setLoading(false);
-                }, 1000);
+                }, 800);
             };
 
             const createNewChat = () => {
                 const newId = Date.now().toString();
-                setConversations(prev => [{ id: newId, title: 'New Conversation' }, ...prev]);
+                setConversations(prev => [{ id: newId, title: 'گفتوگۆی نوێ' }, ...prev]);
                 setMessagesMap(prev => ({
                     ...prev,
                     [newId]: [{ id: 'init-' + newId, role: 'assistant', content: 'سڵاو! گفتوگۆیەکی نوێ دەستی پێکرد. چۆن یارمەتیت بدەم؟' }]
@@ -139,7 +139,7 @@
                         <div className="p-3">
                             <button 
                                 onClick={createNewChat}
-                                className="w-full py-2.5 px-4 rounded-xl primary-gradient text-white font-medium text-sm flex items-center justify-center gap-2 brand-glow transition"
+                                className="w-full py-2.5 px-4 rounded-xl primary-gradient text-white font-medium text-sm flex items-center justify-center gap-2 brand-glow transition cursor-pointer"
                             >
                                 <i data-lucide="plus" className="w-4 h-4"></i>
                                 گفتوگۆی نوێ
@@ -150,7 +150,7 @@
                                 <button
                                     key={c.id}
                                     onClick={() => setCurrentConvoId(c.id)}
-                                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm truncate flex items-center gap-2 transition ${c.id === currentConvoId ? 'bg-primary/20 text-primary border border-primary/30 font-medium' : 'text-muted-foreground hover:bg-card hover:text-foreground'}`}
+                                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm truncate flex items-center gap-2 transition cursor-pointer ${c.id === currentConvoId ? 'bg-primary/20 text-primary border border-primary/30 font-medium' : 'text-muted-foreground hover:bg-card hover:text-foreground'}`}
                                 >
                                     <i data-lucide="message-square" className="w-4 h-4 shrink-0"></i>
                                     <span className="truncate">{c.title}</span>
@@ -164,7 +164,7 @@
                         {/* Header */}
                         <header className="h-14 border-b border-border px-6 flex items-center justify-between bg-background/80 backdrop-blur">
                             <span className="font-semibold text-sm">Zora AI Assistant</span>
-                            <span className="text-xs text-muted-foreground border border-border px-2.5 py-1 rounded-full">Secure Mode</span>
+                            <span className="text-xs text-muted-foreground border border-border px-2.5 py-1 rounded-full">Standalone Mode</span>
                         </header>
 
                         {/* Messages Container */}
@@ -172,7 +172,7 @@
                             <div className="max-w-2xl mx-auto w-full space-y-6">
                                 {messages.map(m => (
                                     <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role === 'user' ? 'primary-gradient text-white rounded-br-sm shadow-lg' : 'bg-card border border-border text-foreground rounded-bl-sm'}`}>
+                                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${m.role === 'user' ? 'primary-gradient text-white rounded-br-sm shadow-lg' : 'bg-card border border-border text-foreground rounded-bl-sm'}`}>
                                             {m.content}
                                         </div>
                                     </div>
@@ -208,7 +208,7 @@
                                     <i data-lucide="send" className="w-4 h-4"></i>
                                 </button>
                             </form>
-                            <p className="text-center text-[11px] text-muted-foreground mt-2">Zora AI — Your Intelligent Companion</p>
+                            <p className="text-center text-[11px] text-muted-foreground mt-2">Zora AI — Clean & Independent Edition</p>
                         </div>
                     </main>
                 </div>
