@@ -3,133 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zora AI — و یاریدەدەری زیرەک</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>پەخشی ڕاستەوخۆی کەناڵی ڕووداو</title>
+    
+    <!-- Video.js CSS -->
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #050505;
-            color: white;
+            font-family: Tahoma, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
         }
-        .primary-gradient {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        h2 {
+            color: #ffcc00;
         }
-        .brand-glow {
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        .player-container {
+            max-width: 850px;
+            margin: 30px auto;
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
         }
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .video-js {
+            width: 100%;
+            height: 480px;
+            border-radius: 8px;
         }
     </style>
 </head>
-<body class="h-screen flex flex-col">
+<body>
 
-    <!-- Header -->
-    <header class="flex items-center justify-between p-4 glass border-b border-white/10">
-        <div class="flex items-center gap-3">
-            <button class="p-2 hover:bg-white/10 rounded-lg lg:hidden">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="w-10 h-10 primary-gradient rounded-xl flex items-center justify-center brand-glow">
-                <i class="fas fa-robot text-white text-xl"></i>
-            </div>
-            <h1 class="font-bold text-xl tracking-tight">Zora AI</h1>
-        </div>
-        <div class="flex items-center gap-3">
-            <button class="px-4 py-2 text-sm font-medium hover:text-purple-400 transition">چوونە ژورەوە</button>
-            <button class="px-4 py-2 text-sm font-bold primary-gradient rounded-xl brand-glow">دەستپێکردن</button>
-        </div>
-    </header>
+    <h2>پەخشی ڕاستەوخۆی تەلەڤیزیۆنی ڕووداو</h2>
 
-    <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center">
-        
-        <!-- Welcome Screen (Visible when no chat) -->
-        <div id="welcome" class="max-w-2xl w-full text-center space-y-8">
-            <div class="inline-block p-4 rounded-3xl bg-purple-500/10 border border-purple-500/20 mb-4">
-                <i class="fas fa-sparkles text-purple-400 text-4xl animate-pulse"></i>
-            </div>
-            <h2 class="text-4xl lg:text-5xl font-black">چۆن دەتوانم یارمەتیت بدەم؟</h2>
-            <p class="text-gray-400 text-lg">هەر پرسیارێکت هەیە لێرە بپرسە، Zora وەڵامت دەداتەوە.</p>
-            
-            <!-- Suggestions -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-10">
-                <button onclick="addMessage('پلانێکی وەرزشی بۆم دابنێ')" class="text-right p-4 glass rounded-2xl hover:border-purple-500/50 transition group">
-                    <span class="text-purple-400 group-hover:pl-2 transition-all">›</span> پلانێکی وەرزشی بۆم دابنێ
-                </button>
-                <button onclick="addMessage('چۆن فێری پڕۆگرامسازی ببم؟')" class="text-right p-4 glass rounded-2xl hover:border-purple-500/50 transition group">
-                    <span class="text-purple-400 group-hover:pl-2 transition-all">›</span> چۆن فێری پڕۆگرامسازی ببم؟
-                </button>
-            </div>
-        </div>
+    <div class="player-container">
+        <video-js id="rudawPlayer" class="vjs-big-play-centered" controls preload="auto" data-setup='{}'>
+            <source src="https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.rudaw.net%2Fhls%2Frudaw-tv%2Fmaster.m3u8&ext=.m3u8" type="application/x-mpegURL" />
+        </video-js>
+    </div>
 
-        <!-- Chat Area -->
-        <div id="chat-container" class="w-full max-w-3xl space-y-6 hidden pb-20">
-            <!-- Messages will appear here -->
-        </div>
-    </main>
+    <!-- Video.js and HLS Scripts -->
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
-    <!-- Input Area -->
-    <footer class="p-4 bg-black/50 backdrop-blur-xl border-t border-white/10">
-        <div class="max-w-3xl mx-auto relative">
-            <textarea id="userInput" rows="1" placeholder="چی لە مێشکتدایە؟..." 
-                class="w-full glass rounded-2xl py-4 pr-4 pl-14 resize-none focus:outline-none focus:border-purple-500/50 text-right" dir="rtl"></textarea>
-            <button onclick="handleSend()" class="absolute left-3 bottom-3 w-10 h-10 primary-gradient rounded-xl flex items-center justify-center brand-glow hover:scale-105 transition">
-                <i class="fas fa-paper-plane text-white"></i>
-            </button>
-        </div>
-        <p class="text-center text-[10px] text-gray-500 mt-2">Zora AI دەتوانێت هەڵە بکات، زانیارییە گرنگەکان بپشکنە.</p>
-    </footer>
-
-    <script>
-        const welcome = document.getElementById('welcome');
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('userInput');
-
-        function addMessage(text, isUser = true) {
-            welcome.classList.add('hidden');
-            chatContainer.classList.remove('hidden');
-
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'} w-full animate-fade-in`;
-            
-            const innerDiv = document.createElement('div');
-            innerDiv.className = isUser 
-                ? 'max-w-[80%] primary-gradient p-4 rounded-2xl rounded-br-none shadow-lg' 
-                : 'max-w-[80%] glass p-4 rounded-2xl rounded-bl-none';
-            
-            innerDiv.innerHTML = `<p dir="rtl" class="leading-relaxed">${text}</p>`;
-            msgDiv.appendChild(innerDiv);
-            chatContainer.appendChild(msgDiv);
-            
-            window.scrollTo(0, document.body.scrollHeight);
-        }
-
-        function handleSend() {
-            const text = userInput.value.trim();
-            if (!text) return;
-            
-            addMessage(text, true);
-            userInput.value = '';
-            
-            // AI Response Simulation
-            setTimeout(() => {
-                addMessage("ببوورە، وەک مۆدێلێکی تاقیکاری تەنها دیزاینەکەم کار دەکات. بۆ ئەوەی AI وەڵامت بداتەوە، پێویستە ئەم کۆدە بە Supabase و API ببەستیتەوە.", false);
-            }, 1000);
-        }
-
-        // Handle Enter key
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-            }
-        });
-    </script>
 </body>
 </html>
