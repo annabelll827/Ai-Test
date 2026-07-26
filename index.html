@@ -69,8 +69,15 @@
           adminError: false,
           newChannelName: '',
           newChannelUrl: '',
-          newChannelBadge: '',
+          newChannelImage: '',
           newChannelIsYt: false,
+          
+          // Edit State
+          editingIndex: null,
+          editName: '',
+          editUrl: '',
+          editImage: '',
+          editIsYt: false,
           
           // Default Channels List
           channels: JSON.parse(localStorage.getItem('nova_channels')) || [
@@ -172,23 +179,74 @@
               localStorage.removeItem('nova_tv_admin');
               this.adminInput = '';
           },
+          handleImageUpload(event, type) {
+              const file = event.target.files[0];
+              if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                      if (type === 'new') {
+                          this.newChannelImage = e.target.result;
+                      } else if (type === 'edit') {
+                          this.editImage = e.target.result;
+                      }
+                  };
+                  reader.readAsDataURL(file);
+              }
+          },
           addChannel() {
               if (!this.newChannelName || !this.newChannelUrl) return;
-              let badgeText = this.newChannelBadge ? this.newChannelBadge.toUpperCase() : this.newChannelName.substring(0, 2).toUpperCase();
+              let badgeText = this.newChannelName.substring(0, 2).toUpperCase();
               this.channels.push({
                   name: this.newChannelName,
                   url: this.newChannelUrl,
                   badge: badgeText,
+                  image: this.newChannelImage || '',
                   isYt: this.newChannelIsYt
               });
               localStorage.setItem('nova_channels', JSON.stringify(this.channels));
               this.newChannelName = '';
               this.newChannelUrl = '';
-              this.newChannelBadge = '';
+              this.newChannelImage = '';
               this.newChannelIsYt = false;
+              document.getElementById('channelImageInput').value = '';
+          },
+          startEdit(index) {
+              this.editingIndex = index;
+              const ch = this.channels[index];
+              this.editName = ch.name;
+              this.editUrl = ch.url;
+              this.editImage = ch.image || '';
+              this.editIsYt = ch.isYt || false;
+          },
+          cancelEdit() {
+              this.editingIndex = null;
+              this.editName = '';
+              this.editUrl = '';
+              this.editImage = '';
+              this.editIsYt = false;
+          },
+          saveEdit(index) {
+              if (!this.editName || !this.editUrl) return;
+              let badgeText = this.editName.substring(0, 2).toUpperCase();
+              this.channels[index] = {
+                  name: this.editName,
+                  url: this.editUrl,
+                  badge: badgeText,
+                  image: this.editImage,
+                  isYt: this.editIsYt
+              };
+              localStorage.setItem('nova_channels', JSON.stringify(this.channels));
+              this.cancelEdit();
           },
           deleteChannel(index) {
               this.channels.splice(index, 1);
+              localStorage.setItem('nova_channels', JSON.stringify(this.channels));
+          },
+          moveChannel(index, direction) {
+              const newIndex = index + direction;
+              if (newIndex < 0 || newIndex >= this.channels.length) return;
+              const item = this.channels.splice(index, 1)[0];
+              this.channels.splice(newIndex, 0, item);
               localStorage.setItem('nova_channels', JSON.stringify(this.channels));
           }
       }">
@@ -282,7 +340,12 @@
                     <template x-for="(channel, index) in channels" :key="index">
                         <div @click="changeChannel(channel.name, channel.url, channel.isYt)" 
                              class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                            <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-700 flex items-center justify-center font-bold text-white mb-2 shadow" x-text="channel.badge"></div>
+                            <template x-if="channel.image">
+                                <img :src="channel.image" class="w-12 h-12 rounded-lg object-cover mb-2 shadow" />
+                            </template>
+                            <template x-if="!channel.image">
+                                <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-700 flex items-center justify-center font-bold text-white mb-2 shadow" x-text="channel.badge"></div>
+                            </template>
                             <span class="text-xs font-bold text-white" x-text="channel.name"></span>
                         </div>
                     </template>
@@ -295,7 +358,7 @@
         <main x-show="currentTab === 'settings'" class="max-w-4xl w-full mx-auto p-4 md:p-6 my-auto" style="display: none;">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
                 <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-gear text-indigo-400"></i> ڕێکخستنەکان و بەڕێوەبردنی کەناڵەکان</h2>
-                <p class="text-xs text-slate-400 mb-6">بۆ زیادکردن یان سڕینەوەی کەناڵەکان، تکایە کۆدی تایبەتی بەڕێوەبەر (%ADMIN%NOVA%TV%CREATE%) بنووسە.</p>
+                <p class="text-xs text-slate-400 mb-6">بۆ زیادکردن، دەستکاری، گۆڕینی شوێن یان سڕینەوەی کەناڵەکان، تکایە کۆدی تایبەتی بەڕێوەبەر (%ADMIN%NOVA%TV%CREATE%) بنووسە.</p>
 
                 <!-- Admin Lock Form -->
                 <div x-show="!isAdminUnlocked" class="space-y-4 max-w-md mx-auto py-10 text-center">
@@ -322,7 +385,10 @@
                         <h3 class="text-sm font-bold text-white">زیادکردنی کەناڵی نوێ</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <input type="text" x-model="newChannelName" placeholder="ناوی کەناڵ (بۆ نموونە: Rudaw)" class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500" />
-                            <input type="text" x-model="newChannelBadge" placeholder="کورتەی لۆگۆ (بۆ نموونە: RD)" class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500" />
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs text-slate-400">هەڵبژاردنی وێنەی لۆگۆ لە گالێری:</label>
+                                <input type="file" id="channelImageInput" @change="handleImageUpload($event, 'new')" accept="image/*" class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer" />
+                            </div>
                         </div>
                         <input type="text" x-model="newChannelUrl" placeholder="لینکی پەخش (m3u8 یان iframe)" class="bg-slate-900 border border-slate-700 w-full px-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500" />
                         <div class="flex items-center gap-2">
@@ -332,17 +398,55 @@
                         <button @click="addChannel()" class="login-btn w-full py-2.5 text-xs font-semibold">زیادکردنی کەناڵ</button>
                     </div>
 
-                    <!-- Existing Channels List with Delete Option -->
+                    <!-- Existing Channels List with Reorder, Edit & Delete Options -->
                     <div class="space-y-3">
-                        <h3 class="text-sm font-bold text-white">سڕینەوەی کەناڵەکان</h3>
-                        <div class="max-h-60 overflow-y-auto space-y-2 pr-2">
+                        <h3 class="text-sm font-bold text-white">بەڕێوەبردنی کەناڵەکان (ڕیزبەندی، دەستکاری، سڕینەوە)</h3>
+                        <div class="max-h-80 overflow-y-auto space-y-2 pr-2">
                             <template x-for="(channel, index) in channels" :key="index">
-                                <div class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex justify-between items-center">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded bg-indigo-600 flex items-center justify-center font-bold text-white text-xs" x-text="channel.badge"></div>
-                                        <span class="text-xs font-bold text-white" x-text="channel.name"></span>
+                                <div class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col gap-3">
+                                    
+                                    <!-- Normal View Row -->
+                                    <div class="flex justify-between items-center" x-show="editingIndex !== index">
+                                        <div class="flex items-center gap-3">
+                                            <template x-if="channel.image">
+                                                <img :src="channel.image" class="w-8 h-8 rounded object-cover shadow" />
+                                            </template>
+                                            <template x-if="!channel.image">
+                                                <div class="w-8 h-8 rounded bg-indigo-600 flex items-center justify-center font-bold text-white text-xs" x-text="channel.badge"></div>
+                                            </template>
+                                            <span class="text-xs font-bold text-white" x-text="channel.name"></span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <!-- Move Up Button -->
+                                            <button @click="moveChannel(index, -1)" :disabled="index === 0" class="bg-slate-700/50 border border-slate-600 text-slate-300 px-2.5 py-1 rounded-lg text-xs hover:bg-slate-700 transition disabled:opacity-30">
+                                                <i class="fa-solid fa-arrow-up"></i>
+                                            </button>
+                                            <!-- Move Down Button -->
+                                            <button @click="moveChannel(index, 1)" :disabled="index === channels.length - 1" class="bg-slate-700/50 border border-slate-600 text-slate-300 px-2.5 py-1 rounded-lg text-xs hover:bg-slate-700 transition disabled:opacity-30">
+                                                <i class="fa-solid fa-arrow-down"></i>
+                                            </button>
+                                            <button @click="startEdit(index)" class="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-2.5 py-1 rounded-lg text-xs hover:bg-indigo-500/20 transition">دەستکاری</button>
+                                            <button @click="deleteChannel(index)" class="bg-red-500/10 border border-red-500/20 text-red-400 px-2.5 py-1 rounded-lg text-xs hover:bg-red-500/20 transition">سڕینەوە</button>
+                                        </div>
                                     </div>
-                                    <button @click="deleteChannel(index)" class="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-lg text-xs hover:bg-red-500/20 transition">سڕینەوە</button>
+
+                                    <!-- Edit Form Row -->
+                                    <div x-show="editingIndex === index" class="space-y-3 bg-slate-900/80 p-3 rounded-lg border border-indigo-500/30" style="display: none;">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <input type="text" x-model="editName" placeholder="ناوی کەناڵ" class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white focus:outline-none focus:border-indigo-500" />
+                                            <input type="file" @change="handleImageUpload($event, 'edit')" accept="image/*" class="bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs text-slate-300 cursor-pointer" />
+                                        </div>
+                                        <input type="text" x-model="editUrl" placeholder="لینکی پەخش" class="bg-slate-800 border border-slate-700 w-full px-3 py-1.5 rounded text-xs text-white focus:outline-none focus:border-indigo-500" />
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" :id="'editYt_' + index" x-model="editIsYt" class="rounded bg-slate-800 border-slate-700 text-indigo-600" />
+                                            <label :for="'editYt_' + index" class="text-xs text-slate-300">یوتیوب/ایفرەیمە؟</label>
+                                        </div>
+                                        <div class="flex justify-end gap-2">
+                                            <button @click="cancelEdit()" class="bg-slate-700 text-slate-300 px-3 py-1 rounded text-xs">پاشگەزبوونەوە</button>
+                                            <button @click="saveEdit(index)" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-semibold">پاشەکەوتکردن</button>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </template>
                         </div>
