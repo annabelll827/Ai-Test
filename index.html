@@ -54,21 +54,92 @@
 </head>
 <body class="min-h-screen font-sans text-slate-100 flex flex-col justify-between" 
       x-data="{ 
-          isUnlocked: false, 
+          isUnlocked: localStorage.getItem('nova_tv_unlocked') === 'true', 
           accessKey: '', 
           errorMessage: false,
+          currentTab: 'livetv',
           currentChannel: 'Gali Kurdistan',
           currentStream: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.host247.net%2Fgk%2Fgksat%2Fplaylist.m3u8&ext=.m3u8',
           isYoutube: false,
           youtubeUrl: '',
+          
+          // Admin Panel State for Settings
+          adminInput: '',
+          isAdminUnlocked: localStorage.getItem('nova_tv_admin') === 'true',
+          adminError: false,
+          newChannelName: '',
+          newChannelUrl: '',
+          newChannelBadge: '',
+          newChannelIsYt: false,
+          
+          // Default Channels List
+          channels: JSON.parse(localStorage.getItem('nova_channels')) || [
+              { name: 'Nova HD', url: 'http://m.live.net.sa:1935/live/quran/playlist.m3u8', badge: 'NOVA', isYt: false },
+              { name: 'Afarin TV', url: 'https://65f16f0fdfc51.streamlock.net/afarinTV/livestream/playlist.m3u8', badge: 'AF', isYt: false },
+              { name: 'Afarin Baxcha', url: 'https://5dcabf026b188.streamlock.net/afarinTV/livestream/playlist.m3u8', badge: 'AB', isYt: false },
+              { name: 'K24', url: 'https://www.youtube.com/embed/live_stream?channel=UCtJzQZz49_zO2K3p0oVwGg&autoplay=1', badge: 'K24', isYt: true },
+              { name: 'Payaam', url: 'https://media2.streambrothers.com:1936/8218/8218/playlist.m3u8', badge: 'P', isYt: false },
+              { name: 'Gali Kurdistan', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.host247.net%2Fgk%2Fgksat%2Fplaylist.m3u8&ext=.m3u8', badge: 'GK', isYt: false },
+              { name: 'AVA HD', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Fhlspackager.akamaized.net%2Flive%2FDB%2FAVA_TV%2FHLS%2FAVA_TV-avc1_2500000%3D10002%2Cmp4a_128000%3D20000.m3u8&ext=.m3u8', badge: 'AVA', isYt: false },
+              { name: 'Avar HD', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Favrstream.com%3A1935%2Flive%2FAvarTv%2Fplaylist.m3u8&ext=.m3u8', badge: 'AVR', isYt: false },
+              { name: 'Channel 8', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.channel8.com%2FChannel8-Kurdish%2Ftracks-v4a1%2Fmono.m3u8&ext=.m3u8', badge: '8', isYt: false },
+              { name: 'Kurdsat HD', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fhlspackager.akamaized.net%2Flive%2FDB%2FKURDSAT_HD%2FHLS%2FKURDSAT_HD-avc1_2500000%3D10002%2Cmp4a_128000%3D20000.m3u8&ext=.m3u8', badge: 'KS', isYt: false },
+              { name: 'Kurdsat News', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F123tv.pro%252Flive%252FaSKpxnSj%252FhhewYcb%252F113226.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'KSN', isYt: false },
+              { name: 'KurdMax', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F123tv.pro%252Flive%252FaSKpxnSj%252FhhewYcb%252F24768.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'KM', isYt: false },
+              { name: 'KurdMax Show', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F123tv.pro%252Flive%252FaSKpxnSj%252FhhewYcb%252F24770.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'KMS', isYt: false },
+              { name: 'Ava Sport', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1858987.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'AS', isYt: false },
+              { name: 'NRT', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F818053.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'NRT', isYt: false },
+              { name: 'NRT2', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F324579.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'N2', isYt: false },
+              { name: 'NRT Sports', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1858985.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'NS', isYt: false },
+              { name: 'Niga Movies', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1858951.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'NIG', isYt: false },
+              { name: 'Astera Movies', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F324618.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'AST', isYt: false },
+              { name: 'Khak HD', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1859024.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'KH', isYt: false },
+              { name: 'Reng Family', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1859030.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'RF', isYt: false },
+              { name: 'Trt Kurdi', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Ftv-trtkurdi.medya.trt.com.tr%2Fmaster_720.m3u8&ext=.m3u8', badge: 'TRT', isYt: false },
+              { name: 'Al-hadath', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.alarabiya.net%2Falarabiapublish%2Falhadath.smil%2Falarabiapublish%2Falhadath_1080p%2Fchunks.m3u8&ext=.m3u8', badge: 'HDT', isYt: false },
+              { name: 'Arabia', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive-stream.skynewsarabia.com%2Fc-horizontal-channel%2Fhorizontal-stream%2Findex.m3u8&ext=.m3u8', badge: 'SKN', isYt: false },
+              { name: 'MBC 1', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924910.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'MBC', isYt: false },
+              { name: 'MBC 2', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924909.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'M2', isYt: false },
+              { name: 'MBC 3', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924908.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'M3', isYt: false },
+              { name: 'MBC 4', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924907.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'M4', isYt: false },
+              { name: 'MBC 5', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924906.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'M5', isYt: false },
+              { name: 'MBC Drama', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924904.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'DR', isYt: false },
+              { name: 'MBC Max', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924900.m3u8%26ext%3D.m3u8&ext=.m3u8', badge: 'MAX', isYt: false },
+              { name: 'Shams HD', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fstream.shams.tv%2Fhls%2F0%2Fstream.m3u8&ext=.m3u8', badge: 'SH', isYt: false },
+              { name: 'BBC News', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fvs-hls-push-ww-live.akamaized.net%2Fx%3D4%2Fi%3Durn%3Abbc%3Apips%3Aservice%3Abbc_news_channel_hd%2Ft%3D3840%2Fv%3Dpv14%2Fb%3D5070016%2Fmain.m3u8&ext=.m3u8', badge: 'BBC', isYt: false },
+              { name: 'beIN Sports HD', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3715.m3u8&ext=.m3u8', badge: 'beIN', isYt: false },
+              { name: 'beIN Sports Global', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3338.m3u8&ext=.m3u8', badge: 'GLOB', isYt: false },
+              { name: 'beIN Sports 1', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3336.m3u8&ext=.m3u8', badge: 'B1', isYt: false },
+              { name: 'beIN Sports 2', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3334.m3u8&ext=.m3u8', badge: 'B2', isYt: false },
+              { name: 'beIN Sports 3', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3332.m3u8&ext=.m3u8', badge: 'B3', isYt: false },
+              { name: 'beIN Sports 4', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3330.m3u8&ext=.m3u8', badge: 'B4', isYt: false },
+              { name: 'beIN Sports 5', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3328.m3u8&ext=.m3u8', badge: 'B5', isYt: false },
+              { name: 'beIN Sports 6', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3327.m3u8&ext=.m3u8', badge: 'B6', isYt: false },
+              { name: 'beIN Sports 7', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3324.m3u8&ext=.m3u8', badge: 'B7', isYt: false },
+              { name: 'beIN Sports 8', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3322.m3u8&ext=.m3u8', badge: 'B8', isYt: false },
+              { name: 'beIN Sports 9', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3320.m3u8&ext=.m3u8', badge: 'B9', isYt: false },
+              { name: 'beIN XTRA 1', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3318.m3u8&ext=.m3u8', badge: 'X1', isYt: false },
+              { name: 'beIN XTRA 2', url: 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3316.m3u8&ext=.m3u8', badge: 'X2', isYt: false },
+              { name: 'a tv', url: 'https://www.youtube.com/embed/P3wREkPcQ1U?autoplay=1&mute=0', badge: 'ATV', isYt: true },
+              { name: 'Kurdistan 24', url: 'https://www.kurdistan24.net/ckb/live', badge: 'K24', isYt: true },
+              { name: 'Kanal D', url: 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fdemiroren.daioncdn.net%2Fkanald%2Fkanald.m3u8%3Fapp%3Dkanald_web%26ce%3D3&ext=.m3u8', badge: 'KD', isYt: false },
+              { name: 'Zagros TV', url: 'https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8', badge: 'ZG', isYt: false }
+          ],
+
           unlock() {
               if (this.accessKey.trim() === 'Callvin.Tv') {
                   this.isUnlocked = true;
+                  localStorage.setItem('nova_tv_unlocked', 'true');
                   this.errorMessage = false;
-                  setTimeout(() => { changeChannel('Gali Kurdistan', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.host247.net%2Fgk%2Fgksat%2Fplaylist.m3u8&ext=.m3u8', false); }, 200);
+                  setTimeout(() => { changeChannel(this.channels[0].name, this.channels[0].url, this.channels[0].isYt); }, 200);
               } else {
                   this.errorMessage = true;
               }
+          },
+          logout() {
+              this.isUnlocked = false;
+              localStorage.removeItem('nova_tv_unlocked');
+              this.accessKey = '';
           },
           changeChannel(name, streamUrl, isYt = false) {
               this.currentChannel = name;
@@ -86,6 +157,39 @@
                       window.player.play().catch(e => console.log('Auto-play prevented'));
                   }
               }
+          },
+          checkAdmin() {
+              if (this.adminInput.trim() === '%ADMIN%NOVA%TV%CREATE%') {
+                  this.isAdminUnlocked = true;
+                  localStorage.setItem('nova_tv_admin', 'true');
+                  this.adminError = false;
+              } else {
+                  this.adminError = true;
+              }
+          },
+          lockAdmin() {
+              this.isAdminUnlocked = false;
+              localStorage.removeItem('nova_tv_admin');
+              this.adminInput = '';
+          },
+          addChannel() {
+              if (!this.newChannelName || !this.newChannelUrl) return;
+              let badgeText = this.newChannelBadge ? this.newChannelBadge.toUpperCase() : this.newChannelName.substring(0, 2).toUpperCase();
+              this.channels.push({
+                  name: this.newChannelName,
+                  url: this.newChannelUrl,
+                  badge: badgeText,
+                  isYt: this.newChannelIsYt
+              });
+              localStorage.setItem('nova_channels', JSON.stringify(this.channels));
+              this.newChannelName = '';
+              this.newChannelUrl = '';
+              this.newChannelBadge = '';
+              this.newChannelIsYt = false;
+          },
+          deleteChannel(index) {
+              this.channels.splice(index, 1);
+              localStorage.setItem('nova_channels', JSON.stringify(this.channels));
           }
       }">
 
@@ -138,13 +242,13 @@
             <div class="flex items-center gap-3">
                 <h1 class="text-xl font-bold tracking-wide text-indigo-400">Nova TV</h1>
             </div>
-            <button @click="isUnlocked = false; accessKey = ''" class="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-1.5 rounded-full text-xs font-medium hover:bg-red-500/20 transition">
+            <button @click="logout()" class="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-1.5 rounded-full text-xs font-medium hover:bg-red-500/20 transition">
                 لۆگۆت / داخستن
             </button>
         </header>
 
-        <!-- Main Grid -->
-        <main class="max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 my-auto">
+        <!-- Main Tab: Live TV -->
+        <main x-show="currentTab === 'livetv'" class="max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 my-auto">
             
             <!-- Video Player -->
             <div class="lg:col-span-2 flex flex-col gap-4">
@@ -175,357 +279,85 @@
                 </h3>
                 
                 <div class="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
-                    
-                    <!-- Nova HD -->
-                    <div @click="changeChannel('Nova HD', 'http://m.live.net.sa:1935/live/quran/playlist.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-700 flex items-center justify-center font-bold text-white mb-2 shadow">NOVA</div>
-                        <span class="text-xs font-bold text-white">Nova HD</span>
-                    </div>
-
-                    <!-- Rudaw -->
-                    <div @click="changeChannel('Rudaw', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.rudaw.net%2Fhls%2Frudaw-tv%2Fmaster.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-amber-600 flex items-center justify-center font-bold text-white mb-2 shadow">RU</div>
-                        <span class="text-xs font-bold text-white">Rudaw</span>
-                    </div>
-
-                    <!-- Afarin TV -->
-                    <div @click="changeChannel('Afarin TV', 'https://65f16f0fdfc51.streamlock.net/afarinTV/livestream/playlist.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center font-bold text-white mb-2 shadow">AF</div>
-                        <span class="text-xs font-bold text-white">Afarin TV</span>
-                    </div>
-
-                    <!-- Afarin Baxcha -->
-                    <div @click="changeChannel('Afarin Baxcha', 'https://5dcabf026b188.streamlock.net/afarinTV/livestream/playlist.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-orange-500 to-amber-600 flex items-center justify-center font-bold text-white mb-2 shadow">AB</div>
-                        <span class="text-xs font-bold text-white">Afarin Baxcha</span>
-                    </div>
-
-                    <!-- Payaam -->
-                    <div @click="changeChannel('Payaam', 'https://media2.streambrothers.com:1936/8218/8218/playlist.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-green-600 to-emerald-800 flex items-center justify-center font-bold text-white mb-2 shadow">P</div>
-                        <span class="text-xs font-bold text-white">Payaam</span>
-                    </div>
-
-                    <!-- Gali Kurdistan -->
-                    <div @click="changeChannel('Gali Kurdistan', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.host247.net%2Fgk%2Fgksat%2Fplaylist.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-yellow-500 to-amber-700 flex items-center justify-center font-bold text-white mb-2 shadow">GK</div>
-                        <span class="text-xs font-bold text-white">Gali Kurdistan</span>
-                    </div>
-
-                    <!-- AVA HD -->
-                    <div @click="changeChannel('AVA HD', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Fhlspackager.akamaized.net%2Flive%2FDB%2FAVA_TV%2FHLS%2FAVA_TV-avc1_2500000%3D10002%2Cmp4a_128000%3D20000.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold text-white mb-2 shadow">AVA</div>
-                        <span class="text-xs font-bold text-white">AVA HD</span>
-                    </div>
-
-                    <!-- Avar HD -->
-                    <div @click="changeChannel('Avar HD', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Favrstream.com%3A1935%2Flive%2FAvarTv%2Fplaylist.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center font-bold text-white mb-2 shadow">AVR</div>
-                        <span class="text-xs font-bold text-white">Avar HD</span>
-                    </div>
-
-                    <!-- Channel 8 -->
-                    <div @click="changeChannel('Channel 8', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.channel8.com%2FChannel8-Kurdish%2Ftracks-v4a1%2Fmono.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-red-600 flex items-center justify-center font-bold text-white mb-2 shadow">8</div>
-                        <span class="text-xs font-bold text-white">Channel 8</span>
-                    </div>
-
-                    <!-- Kurdsat HD -->
-                    <div @click="changeChannel('Kurdsat HD', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fhlspackager.akamaized.net%2Flive%2FDB%2FKURDSAT_HD%2FHLS%2FKURDSAT_HD-avc1_2500000%3D10002%2Cmp4a_128000%3D20000.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-cyan-600 flex items-center justify-center font-bold text-white mb-2 shadow">KS</div>
-                        <span class="text-xs font-bold text-white">Kurdsat HD</span>
-                    </div>
-
-                    <!-- Kurdsat News -->
-                    <div @click="changeChannel('Kurdsat News', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F123tv.pro%252Flive%252FaSKpxnSj%252FhhewYcb%252F113226.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-sky-600 flex items-center justify-center font-bold text-white mb-2 shadow">KSN</div>
-                        <span class="text-xs font-bold text-white">Kurdsat News</span>
-                    </div>
-
-                    <!-- KurdMax -->
-                    <div @click="changeChannel('KurdMax', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F123tv.pro%252Flive%252FaSKpxnSj%252FhhewYcb%252F24768.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white mb-2 shadow">KM</div>
-                        <span class="text-xs font-bold text-white">KurdMax</span>
-                    </div>
-
-                    <!-- KurdMax Show -->
-                    <div @click="changeChannel('KurdMax Show', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F123tv.pro%252Flive%252FaSKpxnSj%252FhhewYcb%252F24770.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-teal-600 flex items-center justify-center font-bold text-white mb-2 shadow">KMS</div>
-                        <span class="text-xs font-bold text-white">KurdMax Show</span>
-                    </div>
-
-                    <!-- Ava Sport -->
-                    <div @click="changeChannel('Ava Sport', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1858987.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-orange-600 flex items-center justify-center font-bold text-white mb-2 shadow">AS</div>
-                        <span class="text-xs font-bold text-white">Ava Sport</span>
-                    </div>
-
-                    <!-- NRT -->
-                    <div @click="changeChannel('NRT', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F818053.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-700 flex items-center justify-center font-bold text-white mb-2 shadow">NRT</div>
-                        <span class="text-xs font-bold text-white">NRT</span>
-                    </div>
-
-                    <!-- NRT2 -->
-                    <div @click="changeChannel('NRT2', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F324579.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white mb-2 shadow">N2</div>
-                        <span class="text-xs font-bold text-white">NRT2</span>
-                    </div>
-
-                    <!-- NRT Sports -->
-                    <div @click="changeChannel('NRT Sports', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1858985.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-rose-600 flex items-center justify-center font-bold text-white mb-2 shadow">NS</div>
-                        <span class="text-xs font-bold text-white">NRT Sports</span>
-                    </div>
-
-                    <!-- Niga Movies -->
-                    <div @click="changeChannel('Niga Movies', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1858951.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-600 flex items-center justify-center font-bold text-white mb-2 shadow">NIG</div>
-                        <span class="text-xs font-bold text-white">Niga Movies</span>
-                    </div>
-
-                    <!-- Astera Movies -->
-                    <div @click="changeChannel('Astera Movies', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F324618.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-violet-600 flex items-center justify-center font-bold text-white mb-2 shadow">AST</div>
-                        <span class="text-xs font-bold text-white">Astera Movies</span>
-                    </div>
-
-                    <!-- Khak HD -->
-                    <div @click="changeChannel('Khak HD', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1859024.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-amber-700 flex items-center justify-center font-bold text-white mb-2 shadow">KH</div>
-                        <span class="text-xs font-bold text-white">Khak HD</span>
-                    </div>
-
-                    <!-- Reng Family -->
-                    <div @click="changeChannel('Reng Family', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252Fline.127-cloudfront.xyz%252Flive%252Faeb4df2522%252Fdcee39b551%252F1859030.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-pink-600 flex items-center justify-center font-bold text-white mb-2 shadow">RF</div>
-                        <span class="text-xs font-bold text-white">Reng Family</span>
-                    </div>
-
-                    <!-- Trt Kurdi -->
-                    <div @click="changeChannel('Trt Kurdi', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Ftv-trtkurdi.medya.trt.com.tr%2Fmaster_720.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-red-800 flex items-center justify-center font-bold text-white mb-2 shadow">TRT</div>
-                        <span class="text-xs font-bold text-white">Trt Kurdi</span>
-                    </div>
-
-                    <!-- Kanal D -->
-                    <div @click="changeChannel('Kanal D', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fdemiroren.daioncdn.net%2Fkanald%2Fkanald.m3u8%3Fapp%3Dkanald_web%26ce%3D3&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-800 flex items-center justify-center font-bold text-white mb-2 shadow">KD</div>
-                        <span class="text-xs font-bold text-white">Kanal D</span>
-                    </div>
-
-
-                    <!-- Al-hadath -->
-                    <div @click="changeChannel('Al-hadath', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.alarabiya.net%2Falarabiapublish%2Falhadath.smil%2Falarabiapublish%2Falhadath_1080p%2Fchunks.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-stone-700 flex items-center justify-center font-bold text-white mb-2 shadow">HDT</div>
-                        <span class="text-xs font-bold text-white">Al-hadath</span>
-                    </div>
-
-                    <!-- Arabia -->
-                    <div @click="changeChannel('Arabia', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive-stream.skynewsarabia.com%2Fc-horizontal-channel%2Fhorizontal-stream%2Findex.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-sky-800 flex items-center justify-center font-bold text-white mb-2 shadow">SKN</div>
-                        <span class="text-xs font-bold text-white">Arabia</span>
-                    </div>
-
-                    <!-- Zagros TV -->
-                    <div @click="changeChannel('Zagros TV', 'https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-amber-600 to-red-700 flex items-center justify-center font-bold text-white mb-2 shadow">ZG</div>
-                        <span class="text-xs font-bold text-white">Zagros TV</span>
-                    </div>
-
-
-                    <!-- MBC 1 -->
-                    <div @click="changeChannel('MBC 1', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924910.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white mb-2 shadow">MBC</div>
-                        <span class="text-xs font-bold text-white">MBC 1</span>
-                    </div>
-
-                    <!-- MBC 2 -->
-                    <div @click="changeChannel('MBC 2', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924909.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white mb-2 shadow">M2</div>
-                        <span class="text-xs font-bold text-white">MBC 2</span>
-                    </div>
-
-                    <!-- MBC 3 -->
-                    <div @click="changeChannel('MBC 3', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924908.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white mb-2 shadow">M3</div>
-                        <span class="text-xs font-bold text-white">MBC 3</span>
-                    </div>
-
-                    <!-- MBC 4 -->
-                    <div @click="changeChannel('MBC 4', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924907.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white mb-2 shadow">M4</div>
-                        <span class="text-xs font-bold text-white">MBC 4</span>
-                    </div>
-
-                    <!-- MBC 5 -->
-                    <div @click="changeChannel('MBC 5', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924906.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white mb-2 shadow">M5</div>
-                        <span class="text-xs font-bold text-white">MBC 5</span>
-                    </div>
-
-                    <!-- MBC Drama -->
-                    <div @click="changeChannel('MBC Drama', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924904.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-700 flex items-center justify-center font-bold text-white mb-2 shadow">DR</div>
-                        <span class="text-xs font-bold text-white">MBC Drama</span>
-                    </div>
-
-                    <!-- MBC Max -->
-                    <div @click="changeChannel('MBC Max', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Flive.kurdtips.uno%2Fproxy.php%3Furl%3Dhttp%253A%252F%252F22941-argued.dn-4kott.com%252Flive%252F2d80d2e615%252F27a38d346b0d%252F924900.m3u8%26ext%3D.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-blue-800 flex items-center justify-center font-bold text-white mb-2 shadow">MAX</div>
-                        <span class="text-xs font-bold text-white">MBC Max</span>
-                    </div>
-
-                    <!-- Shams HD -->
-                    <div @click="changeChannel('Shams HD', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fstream.shams.tv%2Fhls%2F0%2Fstream.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-yellow-600 flex items-center justify-center font-bold text-white mb-2 shadow">SH</div>
-                        <span class="text-xs font-bold text-white">Shams HD</span>
-                    </div>
-
-                    <!-- BBC News -->
-                    <div @click="changeChannel('BBC News', 'https://live.kurdtips.uno/proxy.php?url=https%3A%2F%2Fvs-hls-push-ww-live.akamaized.net%2Fx%3D4%2Fi%3Durn%3Abbc%3Apips%3Aservice%3Abbc_news_channel_hd%2Ft%3D3840%2Fv%3Dpv14%2Fb%3D5070016%2Fmain.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-red-700 flex items-center justify-center font-bold text-white mb-2 shadow">BBC</div>
-                        <span class="text-xs font-bold text-white">BBC News</span>
-                    </div>
-
-                    <!-- beIN Sports HD -->
-                    <div @click="changeChannel('beIN Sports HD', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3715.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">beIN</div>
-                        <span class="text-xs font-bold text-white">beIN Sports HD</span>
-                    </div>
-
-                    <!-- beIN Sports Global HD -->
-                    <div @click="changeChannel('beIN Sports Global', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3338.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">GLOB</div>
-                        <span class="text-xs font-bold text-white">beIN Global</span>
-                    </div>
-
-                    <!-- beIN Sports 1 HD -->
-                    <div @click="changeChannel('beIN Sports 1', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3336.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B1</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 1</span>
-                    </div>
-
-                    <!-- beIN Sports 2 HD -->
-                    <div @click="changeChannel('beIN Sports 2', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3334.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B2</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 2</span>
-                    </div>
-
-                    <!-- beIN Sports 3 HD -->
-                    <div @click="changeChannel('beIN Sports 3', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3332.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B3</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 3</span>
-                    </div>
-
-                    <!-- beIN Sports 4 HD -->
-                    <div @click="changeChannel('beIN Sports 4', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3330.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B4</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 4</span>
-                    </div>
-
-                    <!-- beIN Sports 5 HD -->
-                    <div @click="changeChannel('beIN Sports 5', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3328.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B5</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 5</span>
-                    </div>
-
-                    <!-- beIN Sports 6 HD -->
-                    <div @click="changeChannel('beIN Sports 6', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3327.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B6</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 6</span>
-                    </div>
-
-                    <!-- beIN Sports 7 HD -->
-                    <div @click="changeChannel('beIN Sports 7', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3324.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B7</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 7</span>
-                    </div>
-
-                    <!-- beIN Sports 8 HD -->
-                    <div @click="changeChannel('beIN Sports 8', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3322.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B8</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 8</span>
-                    </div>
-
-                    <!-- beIN Sports 9 HD -->
-                    <div @click="changeChannel('beIN Sports 9', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3320.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-700 flex items-center justify-center font-bold text-white mb-2 shadow">B9</div>
-                        <span class="text-xs font-bold text-white">beIN Sports 9</span>
-                    </div>
-
-                    <!-- beIN Sports XTRA 1 HD -->
-                    <div @click="changeChannel('beIN XTRA 1', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3318.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-800 flex items-center justify-center font-bold text-white mb-2 shadow">X1</div>
-                        <span class="text-xs font-bold text-white">beIN XTRA 1</span>
-                    </div>
-
-                    <!-- beIN Sports XTRA 2 HD -->
-                    <div @click="changeChannel('beIN XTRA 2', 'https://live.kurdtips.uno/proxy.php?url=http%3A%2F%2Faou.magiclive.xyz%3A2052%2Flive%2Fa79KGwP5%2FuW5HjCq%2F3316.m3u8&ext=.m3u8', false)" 
-                         class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
-                        <div class="w-12 h-12 rounded-lg bg-purple-800 flex items-center justify-center font-bold text-white mb-2 shadow">X2</div>
-                        <span class="text-xs font-bold text-white">beIN XTRA 2</span>
-                    </div>
-
+                    <template x-for="(channel, index) in channels" :key="index">
+                        <div @click="changeChannel(channel.name, channel.url, channel.isYt)" 
+                             class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex flex-col items-center text-center cursor-pointer hover:bg-slate-800 transition">
+                            <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-700 flex items-center justify-center font-bold text-white mb-2 shadow" x-text="channel.badge"></div>
+                            <span class="text-xs font-bold text-white" x-text="channel.name"></span>
+                        </div>
+                    </template>
                 </div>
             </div>
 
         </main>
 
+        <!-- Main Tab: Settings (Admin Channel Manager) -->
+        <main x-show="currentTab === 'settings'" class="max-w-4xl w-full mx-auto p-4 md:p-6 my-auto" style="display: none;">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-gear text-indigo-400"></i> ڕێکخستنەکان و بەڕێوەبردنی کەناڵەکان</h2>
+                <p class="text-xs text-slate-400 mb-6">بۆ زیادکردن یان سڕینەوەی کەناڵەکان، تکایە کۆدی تایبەتی بەڕێوەبەر (%ADMIN%NOVA%TV%CREATE%) بنووسە.</p>
+
+                <!-- Admin Lock Form -->
+                <div x-show="!isAdminUnlocked" class="space-y-4 max-w-md mx-auto py-10 text-center">
+                    <input 
+                        type="text" 
+                        x-model="adminInput" 
+                        @keyup.enter="checkAdmin()"
+                        class="code-input w-full px-6 py-3 text-sm"
+                        placeholder="کۆدی بەڕێوەبەر بنووسە"
+                    />
+                    <p x-show="adminError" class="text-red-500 text-xs font-semibold">کۆدی بەڕێوەبەر هەڵەیە!</p>
+                    <button @click="checkAdmin()" class="login-btn w-full py-3 font-semibold text-sm">چوونەژوورەوە بۆ بەڕێوەبردن</button>
+                </div>
+
+                <!-- Admin Panel Content -->
+                <div x-show="isAdminUnlocked" class="space-y-6" style="display: none;">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                        <span class="text-xs text-emerald-400 font-bold flex items-center gap-1"><i class="fa-solid fa-shield-halved"></i> دۆخی بەڕێوەبەر چالاکە</span>
+                        <button @click="lockAdmin()" class="text-xs text-red-400 hover:underline">دەرچوون لە بەڕێوەبەر</button>
+                    </div>
+
+                    <!-- Add Channel Form -->
+                    <div class="bg-slate-800/40 border border-slate-700/50 p-4 rounded-xl space-y-4">
+                        <h3 class="text-sm font-bold text-white">زیادکردنی کەناڵی نوێ</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input type="text" x-model="newChannelName" placeholder="ناوی کەناڵ (بۆ نموونە: Rudaw)" class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500" />
+                            <input type="text" x-model="newChannelBadge" placeholder="کورتەی لۆگۆ (بۆ نموونە: RD)" class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500" />
+                        </div>
+                        <input type="text" x-model="newChannelUrl" placeholder="لینکی پەخش (m3u8 یان iframe)" class="bg-slate-900 border border-slate-700 w-full px-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500" />
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="isYtCheck" x-model="newChannelIsYt" class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0" />
+                            <label for="isYtCheck" class="text-xs text-slate-300">ئایا ئەمە لینکی یوتیوب/ایفرەیمە؟</label>
+                        </div>
+                        <button @click="addChannel()" class="login-btn w-full py-2.5 text-xs font-semibold">زیادکردنی کەناڵ</button>
+                    </div>
+
+                    <!-- Existing Channels List with Delete Option -->
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-bold text-white">سڕینەوەی کەناڵەکان</h3>
+                        <div class="max-h-60 overflow-y-auto space-y-2 pr-2">
+                            <template x-for="(channel, index) in channels" :key="index">
+                                <div class="bg-slate-800/60 border border-slate-700/50 p-3 rounded-xl flex justify-between items-center">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded bg-indigo-600 flex items-center justify-center font-bold text-white text-xs" x-text="channel.badge"></div>
+                                        <span class="text-xs font-bold text-white" x-text="channel.name"></span>
+                                    </div>
+                                    <button @click="deleteChannel(index)" class="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-lg text-xs hover:bg-red-500/20 transition">سڕینەوە</button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
         <!-- Bottom Navigation Bar -->
         <nav class="bg-slate-900 border-t border-slate-800 py-3 px-6 flex justify-around items-center text-xs text-slate-400">
-            <a href="#" class="flex flex-col items-center gap-1 text-indigo-400"><i class="fa-solid fa-house text-lg"></i>Live TV</a>
+            <button @click="currentTab = 'livetv'" :class="currentTab === 'livetv' ? 'text-indigo-400' : 'hover:text-white'" class="flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer"><i class="fa-solid fa-house text-lg"></i>Live TV</button>
             <a href="#" class="flex flex-col items-center gap-1 hover:text-white"><i class="fa-solid fa-film text-lg"></i>Movies</a>
             <a href="#" class="flex flex-col items-center gap-1 hover:text-white"><i class="fa-solid fa-tv text-lg"></i>Series</a>
             <a href="#" class="flex flex-col items-center gap-1 hover:text-white"><i class="fa-solid fa-user text-lg"></i>Profile</a>
-            <a href="#" class="flex flex-col items-center gap-1 hover:text-white"><i class="fa-solid fa-gear text-lg"></i>Settings</a>
+            <button @click="currentTab = 'settings'" :class="currentTab === 'settings' ? 'text-indigo-400' : 'hover:text-white'" class="flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer"><i class="fa-solid fa-gear text-lg"></i>Settings</button>
         </nav>
 
     </div>
