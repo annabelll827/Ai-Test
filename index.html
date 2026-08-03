@@ -73,6 +73,8 @@
           currentStream: '',
           isYoutube: false,
           youtubeUrl: '',
+          isPlaying: false,
+          isMuted: false,
           
           // Search & Filter State
           searchQuery: '',
@@ -125,6 +127,8 @@
           changeChannel(name, streamUrl, isYt = false) {
               this.currentChannel = name;
               this.isYoutube = isYt;
+              this.isPlaying = true;
+              this.isMuted = false;
               if (isYt) {
                   this.youtubeUrl = streamUrl;
                   if (window.player) {
@@ -135,7 +139,41 @@
                   if (window.player) {
                       window.player.src({ src: streamUrl, type: 'application/x-mpegURL' });
                       window.player.load();
-                      window.player.play().catch(e => console.log('Auto-play prevented'));
+                      window.player.play().then(() => {
+                          this.isPlaying = true;
+                      }).catch(e => {
+                          console.log('Auto-play prevented', e);
+                          this.isPlaying = false;
+                      });
+                  }
+              }
+          },
+          togglePlay() {
+              if (this.isYoutube) return;
+              if (window.player) {
+                  if (window.player.paused()) {
+                      window.player.play();
+                      this.isPlaying = true;
+                  } else {
+                      window.player.pause();
+                      this.isPlaying = false;
+                  }
+              }
+          },
+          toggleMute() {
+              if (this.isYoutube) return;
+              if (window.player) {
+                  const muted = window.player.muted();
+                  window.player.muted(!muted);
+                  this.isMuted = !muted;
+              }
+          },
+          toggleFullscreen() {
+              if (window.player) {
+                  if (window.player.isFullscreen()) {
+                      window.player.exitFullscreen();
+                  } else {
+                      window.player.requestFullscreen();
                   }
               }
           },
@@ -187,17 +225,14 @@
                   category: this.newChannelCategory || 'General'
               };
 
-              // Push to channels list
               this.channels.push(newCh);
               localStorage.setItem('nova_channels', JSON.stringify(this.channels));
 
-              // If this is the first channel added, play it automatically and switch to Live TV
               if (this.channels.length === 1) {
                   this.changeChannel(newCh.name, newCh.url, newCh.isYt);
                   this.currentTab = 'livetv';
               }
 
-              // Reset form inputs
               this.newChannelName = '';
               this.newChannelUrl = '';
               this.newChannelImage = '';
@@ -251,7 +286,7 @@
       }">
 
     <div x-show="!isUnlocked" class="h-screen w-screen flex items-center justify-center p-4 fixed inset-0 z-50 bg-[#0d0d15]">
-        <div class="bg-slate-900/80 backdrop-blur-sm border border-slate-800 p-10 rounded-3xl shadow-2xl w-full max-w-md flex flex-col items-center text-center space-y-6">
+        <div class="bg-slate-900/85 backdrop-blur-md border border-slate-800 p-10 rounded-3xl shadow-2xl w-full max-w-md flex flex-col items-center text-center space-y-6">
             
             <div class="bg-slate-800 p-5 rounded-full shadow-inner">
                 <svg class="w-14 h-14 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
@@ -331,7 +366,7 @@
             
             <div class="lg:col-span-2 flex flex-col gap-3 h-full overflow-hidden pb-2">
                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-xl flex-1 w-full relative overflow-hidden flex flex-col">
-                    <div x-show="!isYoutube" class="w-full h-full flex-1">
+                    <div x-show="!isYoutube" class="w-full h-full flex-1 relative">
                         <video-js id="tvPlayer" class="vjs-big-play-centered" controls preload="auto" data-setup='{}'>
                             <source :src="currentStream" type="application/x-mpegURL" />
                         </video-js>
@@ -340,10 +375,30 @@
                         <iframe class="w-full h-full rounded-xl border-0" :src="youtubeUrl" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                     </div>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center justify-between shrink-0">
-                    <div>
-                        <h2 class="text-base font-bold text-white" x-text="currentChannel || 'هیچ کەناڵێک هەڵنەبژێردراوە'"></h2>
-                        <p class="text-[11px] text-slate-400">پەخشی ڕاستەوخۆی بە کوالێتی بەرز</p>
+
+                <div class="flex flex-col gap-2 shrink-0">
+                    <div class="bg-slate-900/90 backdrop-blur-md border border-slate-800 px-5 py-3 rounded-2xl flex items-center justify-between shadow-lg">
+                        <div class="flex items-center gap-6">
+                            <button @click="togglePlay()" class="text-white hover:text-indigo-400 transition text-lg cursor-pointer">
+                                <i :class="isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play'"></i>
+                            </button>
+                            <button @click="toggleMute()" class="text-white hover:text-indigo-400 transition text-lg cursor-pointer">
+                                <i :class="isMuted ? 'fa-solid fa-volume-xmark text-red-400' : 'fa-solid fa-volume-high'"></i>
+                            </button>
+                            <button @click="toggleFullscreen()" class="text-white hover:text-indigo-400 transition text-lg cursor-pointer">
+                                <i class="fa-solid fa-expand"></i>
+                            </button>
+                        </div>
+                        <div class="w-12 h-7 bg-slate-800 rounded-lg overflow-hidden border border-slate-700/50 flex items-center justify-center">
+                            <i class="fa-solid fa-tv text-xs text-indigo-400"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/90 backdrop-blur-md border border-slate-800 px-5 py-3.5 rounded-2xl flex items-center justify-between shadow-lg">
+                        <div>
+                            <h2 class="text-base font-bold text-white" x-text="currentChannel || 'هیچ کەناڵێک هەڵنەبژێردراوە'"></h2>
+                            <p class="text-[11px] text-slate-400 mt-0.5">پەخشی ڕاستەوخۆی بە کوالێتی بەرز</p>
+                        </div>
                     </div>
                 </div>
             </div>
